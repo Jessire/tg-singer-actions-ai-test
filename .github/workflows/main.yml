@@ -1,0 +1,67 @@
+on:
+  workflow_dispatch:
+
+permissions:
+  actions: write
+  contents: write
+
+jobs:
+  sign-job:
+    name: sign-job-name
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+
+      - name: install tg-signer with native AI vision actions
+        env:
+          TG_SIGNER_REPO: ${{ vars.TG_SIGNER_REPO }}
+          TG_SIGNER_REF: ${{ vars.TG_SIGNER_REF }}
+        run: |
+          set -euo pipefail
+          repo="${TG_SIGNER_REPO:-https://github.com/Jessire/TG-SignPulse.git}"
+          ref="${TG_SIGNER_REF:-main}"
+          echo "Installing tg-signer from ${repo}@${ref}"
+          python -m pip install --upgrade pip
+          pip3 install --force-reinstall "git+${repo}@${ref}"
+          tg-signer version
+
+      - name: sign
+        env:
+          SESSION_STRING: ${{ secrets.SESSION_STRING }}
+          TASK_MAP: ${{ secrets.TASK_MAP }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_BASE_URL: ${{ secrets.OPENAI_BASE_URL }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+          TG_SIGNER_NUM_OF_DIALOGS: ${{ vars.TG_SIGNER_NUM_OF_DIALOGS }}
+        run: |
+          set -euo pipefail
+          num_of_dialogs="${TG_SIGNER_NUM_OF_DIALOGS:-500}"
+          echo "Using tg-signer --num-of-dialogs ${num_of_dialogs}"
+          echo "$TASK_MAP" | jq -r 'to_entries[] | "\(.key)\t\(.value | tojson)"' | while IFS=$'\t' read -r key value_json; do
+              task_path=".signer/signs/${key}"
+              mkdir -p "${task_path}"
+              config_name="${task_path}/config.json"
+              log_file="${task_path}/tg-signer.log"
+              echo "$value_json" | jq . > "$config_name"
+              echo "Running task ${key}"
+              set +e
+              tg-signer --session-string "$SESSION_STRING" run-once --num-of-dialogs "$num_of_dialogs" "${key}" 2>&1 | tee "$log_file"
+              signer_status=${PIPESTATUS[0]}
+              set -e
+              if [ "$signer_status" -ne 0 ]; then
+                  exit "$signer_status"
+              fi
+              if grep -E "PEER_ID_INVALID|PeerIdInvalid|ID not found|Traceback|Action did not complete|AI .* failed|AI did not return" "$log_file"; then
+                  echo "::error::tg-signer reported a sign failure. Check TASK_MAP chat_id/actions/session/AI settings."
+                  exit 1
+              fi
+          done
