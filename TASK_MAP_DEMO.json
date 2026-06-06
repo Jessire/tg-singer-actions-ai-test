@@ -1,0 +1,71 @@
+{
+  "image_captcha_sign": {
+    "chats": [
+      {
+        "chat_id": 1234567890,
+        "name": "image captcha bot",
+        "delete_after": null,
+        "actions": [
+          {
+            "action": 1,
+            "text": "/checkin"
+          },
+          {
+            "action": 6,
+            "ai_prompt": "Read the image captcha or sign-in answer from the image. Return only the exact text that should be sent to the bot. Do not explain. Do not use Markdown."
+          }
+        ],
+        "action_interval": 1.0
+      }
+    ],
+    "sign_at": "30 10 * * *",
+    "random_seconds": 1800,
+    "sign_interval": 1
+  },
+  "image_button_sign": {
+    "chats": [
+      {
+        "chat_id": 1234567890,
+        "name": "image option bot",
+        "delete_after": null,
+        "actions": [
+          {
+            "action": 1,
+            "text": "/checkin"
+          },
+          {
+            "action": 4,
+            "ai_prompt": "Use the image, question, and button labels to choose the correct button. Return only JSON. Do not explain."
+          }
+        ],
+        "action_interval": 1.0
+      }
+    ],
+    "sign_at": "35 10 * * *",
+    "random_seconds": 1800,
+    "sign_interval": 1
+  },
+  "text_calculation_sign": {
+    "chats": [
+      {
+        "chat_id": 1234567890,
+        "name": "calculation bot",
+        "delete_after": null,
+        "actions": [
+          {
+            "action": 1,
+            "text": "/checkin"
+          },
+          {
+            "action": 5,
+            "ai_prompt": "Solve the question and return only the answer text. Do not explain."
+          }
+        ],
+        "action_interval": 1.0
+      }
+    ],
+    "sign_at": "40 10 * * *",
+    "random_seconds": 1800,
+    "sign_interval": 1
+  }
+}
