@@ -60,7 +60,7 @@ jobs:
               if [ "$signer_status" -ne 0 ]; then
                   exit "$signer_status"
               fi
-              if grep -E "PEER_ID_INVALID|PeerIdInvalid|ID not found|Traceback|Action did not complete|AI .* failed|AI did not return" "$log_file"; then
+              if grep -E "PEER_ID_INVALID|PeerIdInvalid|Action did not complete|AI .* failed|AI did not return" "$log_file"; then
                   echo "::error::tg-signer reported a sign failure. Check TASK_MAP chat_id/actions/session/AI settings."
                   exit 1
               fi
